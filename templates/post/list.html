@@ -1,0 +1,68 @@
+{% extends "post/base.html" %}
+{% load blog_tags %}
+{% block title %}My Blog{% endblock %}
+{% block content %}
+    <div id="myCarousel" class="carousel slide" data-ride="carousel">
+<!-- Indicators -->
+<ol class="carousel-indicators">
+    <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+    <li data-target="#myCarousel" data-slide-to="1"></li>
+    <li data-target="#myCarousel" data-slide-to="2"></li>
+</ol>
+
+<!-- Wrapper for slides -->
+<div class="carousel-inner" role="listbox">
+    {% for p in visuals %}
+    {% if forloop.counter == 1 %}
+    <div class="item active">
+    {% else %}
+    <div class="item">
+    {% endif %}
+        <img src="{{ p.img }}" alt="Image" width="460" height="345">
+  <div class="carousel-caption">
+    <h3>{{ p.title }}</h3>
+  </div>
+    </div>
+    {% endfor %}
+    </div>
+
+    <!-- Left and right controls -->
+    <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+        <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+        <span class="sr-only">Previous</span>
+    </a>
+    <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
+        <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+        <span class="sr-only">Next</span>
+    </a>
+</div>
+    <h1>My Comments</h1>
+        {% for post in posts %}
+        <h2>
+            <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+        </h2>
+        <p class="date">
+            Published {{ post.publish }} by {{ post.author }}
+        </p>
+        {{ post.body|markdown|linebreaks }}
+        <p class="tags">Tags: {{ post.tags.all|join:", " }}</p>
+    {% endfor %}
+    {% include "pagination.html" with page=posts %}
+{#        <h2>#}
+{#            <a href="{% url 'polls:index' %}">Опрос</a>#}
+{#        </h2>#}
+    {% if latest_question_list %}
+    <ul>
+    {% for question in latest_question_list %}
+        <li><a href="/polls/{{ question.id }}/">{{ question.question_text }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No polls are available.</p>
+{% endif %}
+    <div id="sidebar">
+    <h2>My blog</h2>
+    <p>This is my blog. I've written {% total_posts %} posts so far.</p>
+      <h3>Latest posts</h3>{% show_latest_posts 3 %}
+    </div>
+{% endblock %}
