@@ -35,3 +35,7 @@ class LoginForm(forms.Form):
         widget=forms.PasswordInput
     )
 
+
+class PredictForm(forms.Form):
+    category = forms.CharField()
+    price = forms.FloatField()

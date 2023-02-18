@@ -1,3 +1,7 @@
+from pathlib import Path
+import joblib
+from pandas import read_pickle
+
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, F, Sum
@@ -10,19 +14,27 @@ from cart.cart import Cart
 from cart.forms import CartAddProductForm
 from teach import settings
 # from cart.cart import Cart
-from .models import Post, Recipe, Category, Product, ingredientItem, Visual, Question, Choice
+from .models import Post, Recipe, Category, Product, ingredientItem, Visual, Question, Choice, PredResult
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from .forms import CommentForm, RecipeCreateForm, LoginForm
+from .forms import CommentForm, RecipeCreateForm, LoginForm, PredictForm
 from django.contrib.auth import authenticate, login
 from django.http import HttpResponse
-
-
 # @login_required
 from .utils import get_year_dict, months, colorPrimary
+from django.shortcuts import render
+from django.http import JsonResponse
+import pickle
+pickle_in = open('./savedModels/classifierModel.pkl', 'rb')
+classifier = pickle.load(pickle_in)
 
 
 def post_list(request):
     # ob_list = Post.objects.all()
+    if request.method == 'POST':
+        comment_form = PredictForm(data=request.POST)
+        if comment_form.is_valid():
+            comment_form.save()
+    comment_form = PredictForm()
     latest_question_list = Question.objects.all()
     search_post = request.GET.get('search')
     visuals = Visual.objects.order_by('index').all()
@@ -46,7 +58,8 @@ def post_list(request):
             'posts': posts,
             'section': 'post_list',
             'visuals': visuals,
-            'latest_question_list': latest_question_list
+            'latest_question_list': latest_question_list,
+            'comment_form': comment_form
         }
     )
 
@@ -275,3 +288,48 @@ def vote(request, question_id):
 def results(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
     return render(request, 'post/results.html', {'question': question})
+
+
+def prediction(sepal_length):
+    prediction = classifier.predict(
+        [[sepal_length]])
+    print(prediction)
+    return prediction
+
+
+def home(request):
+    res = ''
+    if request.method == 'POST':
+        sepal_length = float(request.POST.get('sepal_length'))
+        result = prediction(sepal_length)
+        if result == 0:
+            res = 'Meat'
+        elif result == 2:
+            res = 'Cake'
+        elif result == 1:
+            res = 'Milk'
+    return render(request, 'post/home.html', {'result': res})
+
+
+# def predict_chances(request):
+#     if request.POST.get('action') == 'post':
+#         not_cat = request.POST.get('category')
+#         category = 1
+#         if not_cat == 'Tea'.lower():
+#             category = 0
+#         price = float(request.POST.get('price'))
+#         model = read_pickle("new_model.pickle")
+#         result = model.predict([[float(category), price]])
+#         popular = result[0]
+#         # if popular == 0.:
+#         #     pop = 'low'
+#         # elif popular == 1.:
+#         #     pop = 'middle'
+#         # elif popular == 2.:
+#         #     pop = 'high'
+#         PredResult.objects.create(category=category, price=price, popular=popular)
+#         return JsonResponse({
+#             'result': popular,
+#             'category': category,
+#             'price': price
+#         })

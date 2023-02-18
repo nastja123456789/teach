@@ -138,3 +138,12 @@ class Choice(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     choice_text = models.ForeignKey(Product, on_delete=models.CASCADE)
     votes = models.IntegerField(default=0)
+
+
+class PredResult(models.Model):
+    category = models.CharField(max_length=30)
+    price = models.FloatField()
+    popular = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.popular
