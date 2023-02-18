@@ -23,6 +23,7 @@ urlpatterns = [
     path('polls/<int:question_id>/vote/', views.vote, name='vote'),
     # path('prediction', views.prediction, name="prediction")
     path('prediction', views.home, name='home'),
+    path('logout', views.user_logout, name='logout')
     # path('polls/predict/', views.predict_chances, name='submit_prediction'),
     # path('cart/', views.cart_detail, name='cart_detail'),
     # path('cart/add/<int:ingredient_item_id>/', views.cart_add, name='cart_add'),

@@ -1,7 +1,7 @@
 from pathlib import Path
 import joblib
 from pandas import read_pickle
-
+from django.contrib.auth.models import User
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, F, Sum
@@ -17,7 +17,7 @@ from teach import settings
 from .models import Post, Recipe, Category, Product, ingredientItem, Visual, Question, Choice, PredResult
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from .forms import CommentForm, RecipeCreateForm, LoginForm, PredictForm
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse
 # @login_required
 from .utils import get_year_dict, months, colorPrimary
@@ -150,10 +150,14 @@ def recipe(request):
     recipes = Recipe.objects.all()
     if request.method == 'POST':
         recipe_create = RecipeCreateForm(data=request.POST)
-        if recipe_create.is_valid():
-            new_recipe_create = recipe_create.save(commit=False)
-            new_recipe_create.author = request.user
-            new_recipe_create.save()
+        if request.user.is_authenticated:
+            if recipe_create.is_valid():
+                new_recipe_create = recipe_create.save(commit=False)
+                new_recipe_create.author = request.user
+                #
+                new_recipe_create.save()
+        else:
+            return render(request, 'post/login.html')
     recipe_create = RecipeCreateForm()
     return render(request, 'post/price.html', {
         'recipes': recipes,
@@ -205,9 +209,26 @@ def user_login(request):
                         'post/list.html'
                     )
                 else:
+                    # usering = User.objects.create_user(
+                    #     username=cd['username'],
+                    #     password=cd['password']
+                    # )
+                    # usering.save()
                     return HttpResponse('Disabled account')
+                    # return render(
+                    #     request,
+                    #     'post/list.html'
+                    # )
             else:
-                return HttpResponse('Invalid login')
+                usering = User.objects.create_user(
+                    username=cd['username'],
+                    password=cd['password']
+                )
+                usering.save()
+                return render(
+                    request,
+                    'post/list.html'
+                )
     else:
         form = LoginForm()
     return render(
@@ -215,6 +236,11 @@ def user_login(request):
         'post/login.html',
         {'form': form}
     )
+
+
+def user_logout(request):
+    logout(request)
+    return render(request, 'post/login.html')
 
 
 @staff_member_required
